@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from category_encoders import TargetEncoder
 
@@ -20,10 +21,19 @@ def transform_data(df):
     """
     Function to perform initial data wrangling, feature creation, and cleaning (clipping/capping/log transformation) that does NOT require statistics from the train set. This function MUST be run on X_train, X_test, and new data.
     """
-    # Features Creation: CITY and Log Target Price
-    df["CITY"] = df["ADDRESS"].str.split(",").str[-1].str.strip()
-    df["TARGET(PRICE_IN_LACS)_LOG"] = np.log1p(df["TARGET(PRICE_IN_LACS)"])
 
+    # Target column
+    target_col = "TARGET(PRICE_IN_LACS)"
+    log_target_col = "TARGET(PRICE_IN_LACS)_LOG"
+
+    # Log transform the target only when it is available
+    if target_col in df.columns:
+        df[log_target_col] = np.log1p(df[target_col])
+
+
+    # Features Creation: CITY 
+    df["CITY"] = df["ADDRESS"].str.split(",").str[-1].str.strip()
+    
 
     # Capping BHK_NO. 
     BHK_CAP = 6
@@ -49,8 +59,14 @@ def transform_data(df):
     df["SQFT_PER_BHK_LOG"] = np.log1p(df["SQFT_PER_BHK"])
 
 
+    # list of unnecessary columns
+    drop_cols = ["ADDRESS", "BHK_NO.","SQUARE_FT", "LATITUDE", "LONGITUDE", "READY_TO_MOVE", "SQFT_PER_BHK", "SQUARE_FT_CLIPPED"]
+
+    # Add Original Target Column to list of drop_cols if Present
+    if target_col in df.columns:
+        drop_cols.append(target_col)
+
     # Drop unnecessary columns
-    drop_cols = ["ADDRESS", "BHK_NO.","SQUARE_FT", "LATITUDE", "LONGITUDE", "TARGET(PRICE_IN_LACS)", "READY_TO_MOVE", "SQFT_PER_BHK", "SQUARE_FT_CLIPPED"]
     df = df.drop(columns=drop_cols, errors='ignore')
 
     return df
@@ -58,11 +74,51 @@ def transform_data(df):
 
 
 
+
+# ------- LOAD AND TRANSFORM PIPELINE ------
+def load_and_transform (filepath):
+    """
+    About:
+        Load and transform datasets before building full model pipeline.
+        It handles the target column conditionally.
+    input: (str)
+        filepath to the data directory
+    return: (pd.DataFrame, pd.Series or None)
+        X_train, X_val, y_train, y_val
+    """
+
+    # ----- IMPORT DATASET ------
+    df = pd.read_csv(filepath)
+
+    # ----- TRANSFORM DATA ------
+    X = transform_data(df)
+
+    # initialize "y" as None
+    y = None
+
+    # test target separation if exists
+    if "TARGET(PRICE_IN_LACS)_LOG" in X.columns:
+        y = X.pop("TARGET(PRICE_IN_LACS)_LOG")
+    
+        # ----- TRAIN-VALIDATION SET SPLIT ------
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    return X_train, X_val, y_train, y_val
+
+
+
+
+
 # --------PIPELINE CONSTRUCTION FUNCTION------------
 
-def col_transform_pipeline(model_instance):
+def build_full_pipeline(model_instance):
     """
-    Builds full End-to-End ML pipeline including preprocessing and the model
+    About: 
+        Builds full End-to-End ML pipeline including preprocessing (ColumnTransformation) and the model
+    Input: 
+        Model_instance (instantiated models eg. LinearRegression)
+    Output: 
+        Full Pipeline (sklearn.pipeline.Pipeline)
     """
 
     # ====== DEFINE FEATURES FOR COLUMNTRANSFORMER =======
@@ -109,17 +165,20 @@ def col_transform_pipeline(model_instance):
         verbose_feature_names_out=False
     ).set_output(transform="pandas")
 
-    return preprocessor
+
+    # ====== CREATE FULL PIPELINE ========
+    full_pipeline = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("model", model_instance)
+        ]
+    )
+
+    return full_pipeline
 
 
 
 
-# # ====== CREATE FULL PIPELINE ========
-# full = Pipeline(
-#     steps=[
-#         ("preprocessor", preprocessor),
-#         ("model", model_instance)
-#     ]
-# )
+
 
 
