@@ -19,7 +19,12 @@ from category_encoders import TargetEncoder
 # complex clipping logic, dropping original columns
 def transform_data(df):
     """
-    Function to perform initial data wrangling, feature creation, and cleaning (clipping/capping/log transformation) that does NOT require statistics from the train set. This function MUST be run on X_train, X_test, and new data.
+    About:
+        Function to perform initial data wrangling, feature creation, and cleaning (clipping/capping/log transformation)
+    Input: 
+        pd.Dataframe
+    Output:
+        pd.DataFrame - cleaned datafarme
     """
 
     # Target column
