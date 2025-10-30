@@ -2,13 +2,15 @@
 
 import os
 import sys
+import joblib 
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.linear_model import LinearRegression, ridge_regression
-from sklearn.model_selection import train_test_split
+from scipy.stats import randint, uniform
+from sklearn.linear_model import LinearRegression, ridge_regression, Ridge, Lasso
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, RandomizedSearchCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
@@ -92,3 +94,87 @@ def train_model(X_train, X_val, y_train, y_val, model_instance):
     test_msg = print(f"RMSE on validation set: {rmse_val}")
 
     return rmse_train, rmse_val
+
+
+
+
+
+
+# ------ GRIDSEARCH CV ---------
+def run_gridsearch_model(X_train, y_train, model_instance, parameters):
+    """
+    About:
+        Function that runs gridsearch cross validation to obtain best parameters
+    Input:
+        X_train,
+        y_train,
+        model_instance,
+        parameters - (dict)
+    output:
+        grid_search,
+        cv_result - (pd.DataFrame)
+    """
+
+    # full pipeline
+    model = build_full_pipeline(model_instance)
+
+    # grid search 
+    grid_search = GridSearchCV(
+        model_instance,
+        parameters,
+        scoring = 'neg_root_mean_squared_error',
+        cv = 5
+    )
+    grid_search.fit(X_train, y_train)
+
+    # Dataframe of cv_result
+    cv_res = pd.DataFrame(grid_search.cv_results_)
+
+    return grid_search, cv_res
+
+
+
+
+
+# ------- RANDOMIZED SEARCH CV ------
+
+def run_randomize_search(model_instance, X_train, y_train, params_distribs, n_iter=10):
+    """
+    About:
+        Function to perform Randomize search to obtain best model parameters
+    Input:
+        model_instance, eg LinearRegression()
+        X_train - pd.DataFrame
+        y_train - pd.Series
+        params_distribs - dict
+        n_iter - int
+    output:
+        rand_search,
+        cv_result - pd.DataFrame
+    """
+    
+    # full pipeline
+    model = build_full_pipeline(model_instance)
+
+    # random search
+    rand_search = RandomizedSearchCV(
+        estimator= model,
+        param_distributions= param_distribs,
+        n_iter= n_iter,
+        scoring="neg_root_mean_squared_error",
+        cv= 5,
+        verbose=2,
+        random_state=42,
+    )
+    rand_search.fit(X_train, y_train)
+
+    # Dataframe of cv_result
+    cv_res = pd.DataFrame(rand_search.cv_results_)
+
+    # Best parameter
+    best_param = rand_search.best_params_
+
+    # best_model 
+    best_model = rand_search.best_estimator_
+
+    return rand_search, cv_res
