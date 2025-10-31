@@ -98,7 +98,12 @@ The Transformation was splitted into two segments. The first segments involves m
 
 ## **Phase 3: Training Different Models with Default Hyperparameters**
 The goal of this phase is to discover models that will perform more effectly on the data before proceeding to tuning the model hyperparameter tuning or giving any model any focused attention. four models were trained with their default values. These models include; `Linear Regression`, `Decision Tree Regressor`, `Randomn Forest Regressor`, `Support Vector Regressor`. The outcome of this phase should that the linear regression performed poorly and followed by untuned SVR. However, Decision tree experienced a very serious Overfitting. While Random forest also had a slight but significant Overfiting.
+
+![](images/model_comparism.png)
+
 - Ridge and Lasso Regression was trained on the data with GridSearchCV on the `alpha`. Result turns out to be slightly better but still poor which suggests that the data is non-linear 
 - GridSearchCV was carried on decision tree with result still showing a slight overfit
 - RandomSearchCV was carried in Random forest. result still showed slight overfit, but better than decision tree
-- Check out the `model.py` script [here](scripts/model.py) and the model notebook [here](notebooks/models.ipynb) 
+- Check out the `model.py` script [here](scripts/model.py) and the model notebook [here](notebooks/models.ipynb)
+
+![](images/features_importance.png)
