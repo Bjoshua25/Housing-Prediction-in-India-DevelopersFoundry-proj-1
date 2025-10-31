@@ -69,3 +69,25 @@ This confirms that the transformations preserved the core predictive power of th
 ### **Next Steps**
 
 The next phase will involve applying appropriate **encoding techniques** to the high-cardinality (like CITY) and low-cardinality (like POSTED\_BY) categorical features, finalizing the dataset for model selection and training.
+
+---
+
+
+## **Phase 2: Full Transformation Pipeline and Features Engineering**
+The Transformation was splitted into two segments. The first segments involves mere pandas-based transformation that do not involve statistics tranformation. These involves processing such as creating new columns, log transformation, applying IQR clipping to handle outliers and column capping. Meanwhile the second segment involved statistical and more advanced transformations such as normalization of numeric features, one hot encoding of categorical features, target encoding of high cardinality categorical features, all of which were applied through sklearn `ColumnTransformer`.  
+### **Pandas-based Transformation**
+- Log transformation of Target Column `TARGET(PRICE_IN_LACS)` to handle its skewdness
+- Create a new feature `CITY` by extracting city from `ADDRESS` column
+- Capping number of bedrooms `BHK_NO` to 6 to handle outliers
+- Clipping `LATITUDE, LONGITUDE, SQUARE_FT_CLIPPED` with the aid of Inter Quantile Range (IQR) to handle outliers
+- Creating ratio Features for robust EDA and model prediction. like, square_ft of each rooms: `SQFT_PER_BHK`. which helps to know if the size of the bedrooms affect the price.
+- Drop Unnecessary columns due to their multicollinearity, Leakage, or duplicate.
+- This transformation function can be found in [transform_data()](scripts/preprocess.py)
+
+
+### **sklearn ColumnTransformer Pipeline**
+- Standard Scaling on numeric features
+- OneHotEncoding on low cardinality categorical features, such as `POSTED_BY, BHK_OR_RK`.
+- Target Encoding of high cardinality categorical feature like `CITY`. This help replace the cities by the `Mean House Prices` without offering leakage. This function was offered by `category_encoders`
+- Finally, the column transformer was compiled with a list of tuples of all steps listed above.
+- full pipeline function can be found in the preprocess script; [build_full_pipeline()](scripts/preprocess.py)
