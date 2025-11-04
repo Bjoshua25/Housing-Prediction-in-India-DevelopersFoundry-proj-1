@@ -123,7 +123,8 @@ def run_gridsearch_model(X_train, y_train, model_instance, parameters):
         model_instance,
         parameters,
         scoring = 'neg_root_mean_squared_error',
-        cv = 5
+        cv = 3,
+        verbose= 2,
     )
     grid_search.fit(X_train, y_train)
 
@@ -159,10 +160,10 @@ def run_randomize_search(model_instance, X_train, y_train, params_distribs, n_it
     # random search
     rand_search = RandomizedSearchCV(
         estimator= model,
-        param_distributions= param_distribs,
+        param_distributions= params_distribs,
         n_iter= n_iter,
         scoring="neg_root_mean_squared_error",
-        cv= 5,
+        cv= 3,
         verbose=2,
         random_state=42,
     )
@@ -178,3 +179,27 @@ def run_randomize_search(model_instance, X_train, y_train, params_distribs, n_it
     best_model = rand_search.best_estimator_
 
     return rand_search, cv_res
+
+
+
+
+
+# ----- SAVING BEST MODEL ------
+def save_model (model, filename= "india_housing_price_model.pkl"):
+    """
+    About:
+        Save model using joblib as .pkl
+    Input: 
+        model,
+        filename - str
+    output:
+        completion message
+    """
+    # save best model
+    joblib.dump(
+        model,
+        Path.cwd().parent / filename #filepath
+    )
+
+    print(f"Successfully Saved {filename} to {Path.cwd().parent}")
+
