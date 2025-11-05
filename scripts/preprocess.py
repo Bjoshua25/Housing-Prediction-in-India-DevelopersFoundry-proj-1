@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -77,8 +77,10 @@ def transform_data(df):
     return df
 
 
+# function transformer for pipeline integration
+wrangler = FunctionTransformer(func=transform_data)
 
-
+   
 
 # ------- LOAD AND TRANSFORM PIPELINE ------
 def load_and_transform (filepath):
@@ -174,6 +176,7 @@ def build_full_pipeline(model_instance):
     # ====== CREATE FULL PIPELINE ========
     full_pipeline = Pipeline(
         steps=[
+            ("wrangling", wrangler),
             ("preprocessor", preprocessor),
             ("model", model_instance)
         ]
